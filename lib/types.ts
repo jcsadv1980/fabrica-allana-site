@@ -23,6 +23,8 @@ export type Produto = {
   tamanhos?: ProdutoTamanho[]
 }
 
+export type ProdutoPublico = Omit<Produto, 'custo'>
+
 export type TipoMovimentacao = 'entrada' | 'saida'
 
 export type MovimentacaoEstoque = {

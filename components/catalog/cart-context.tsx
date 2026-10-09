@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { ItemVenda, Produto } from '@/lib/types'
+import type { ItemVenda, ProdutoPublico as Produto } from '@/lib/types'
 
 const STORAGE_KEY = 'aa-sports-carrinho'
 
@@ -26,6 +26,7 @@ type CartContextValue = {
   removerItem: (produtoId: string, tamanho: string) => void
   atualizarQuantidade: (produtoId: string, tamanho: string, quantidade: number) => void
   limparCarrinho: () => void
+  substituirItens: (itens: CartItem[]) => void
   cartOpen: boolean
   setCartOpen: (open: boolean) => void
 }
@@ -120,6 +121,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removerItem,
       atualizarQuantidade,
       limparCarrinho,
+      substituirItens: setItens,
       cartOpen,
       setCartOpen,
     }),

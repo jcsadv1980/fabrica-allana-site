@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { buildWhatsAppShareUrl } from '@/lib/whatsapp'
-import type { Produto } from '@/lib/types'
+import type { ProdutoPublico as Produto } from '@/lib/types'
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (

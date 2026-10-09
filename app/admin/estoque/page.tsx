@@ -5,7 +5,8 @@ import { MovimentacaoFormDialog } from '@/components/admin/movimentacao-form-dia
 import { StockIntelligence } from '@/components/admin/stock-intelligence'
 import type { MovimentacaoEstoque, Produto, Venda } from '@/lib/types'
 
-export default async function AdminEstoquePage() {
+export default async function AdminEstoquePage({ searchParams }: { searchParams: Promise<{ produto?: string; aba?: string }> }) {
+  const filters = await searchParams
   const supabase = createServiceClient()
 
   const [produtosResult, movimentacoesResult, vendasResult] = await Promise.all([
@@ -22,6 +23,8 @@ export default async function AdminEstoquePage() {
       .limit(30),
     supabase.from('vendas').select('id, itens, total, data, cliente').order('data', { ascending: false }).limit(1000),
   ])
+
+  if (produtosResult.error || movimentacoesResult.error || vendasResult.error) throw new Error('Não foi possível carregar o estoque.')
 
   const produtos = ((produtosResult.data ?? []) as unknown as (Produto & {
     produto_tamanhos: Produto['tamanhos']
@@ -57,7 +60,7 @@ export default async function AdminEstoquePage() {
         <div className="mb-3 flex items-end justify-between gap-3">
           <div><h2 className="text-sm font-semibold text-muted-foreground">Visão geral por tamanho</h2><p className="text-xs text-muted-foreground">Consulte rapidamente todos os conjuntos e identifique reposições.</p></div>
         </div>
-        <StockIntelligence produtos={produtos} vendas={vendas} />
+        <StockIntelligence key={`${filters.produto}-${filters.aba}`} produtos={filters.produto ? produtos.filter(product => product.id === filters.produto) : produtos} vendas={vendas} initialTab={filters.aba === 'reposicao' ? 'reposicao' : 'mapa'} />
       </div>
 
       <div>

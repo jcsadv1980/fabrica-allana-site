@@ -12,7 +12,7 @@ import { useCart } from '@/components/catalog/cart-context'
 import { ShareProduct } from '@/components/catalog/share-product'
 import { QuantityInput } from '@/components/catalog/quantity-input'
 import { flyToCart } from '@/lib/fly-to-cart'
-import type { Produto } from '@/lib/types'
+import type { ProdutoPublico as Produto } from '@/lib/types'
 
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -135,6 +135,7 @@ export function ProductCard({ produto }: { produto: Produto }) {
                 <button
                   key={t.id}
                   type="button"
+                  aria-label={`${produto.nome}, tamanho ${t.tamanho}`}
                   aria-pressed={tamanhoSelecionado === t.tamanho}
                   onClick={() => {
                     setTamanhoSelecionado(t.tamanho)
@@ -142,7 +143,7 @@ export function ProductCard({ produto }: { produto: Produto }) {
                     setAvisoTamanho(false)
                   }}
                   className={cn(
-                    'flex h-8 min-w-8 items-center justify-center rounded-md border px-2 text-sm font-medium transition-colors',
+                    'flex h-11 min-w-11 items-center justify-center rounded-md border px-2 text-sm font-medium transition-colors',
                     tamanhoSelecionado === t.tamanho
                       ? 'border-primary bg-primary text-primary-foreground'
                       : avisoTamanho
@@ -167,12 +168,12 @@ export function ProductCard({ produto }: { produto: Produto }) {
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex flex-col items-stretch gap-2 px-3 pt-0 sm:flex-row sm:items-center sm:px-4">
+      <CardFooter className="flex flex-col items-stretch gap-2 px-3 pt-0 sm:px-4">
         <div className="flex items-center justify-between rounded-md border border-input sm:justify-start">
           <button
             type="button"
-            aria-label="Diminuir quantidade"
-            className="flex h-9 w-9 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40"
+            aria-label={`Diminuir ${produto.nome}, tamanho ${tamanhoSelecionado ?? 'não selecionado'}`}
+            className="flex size-11 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40"
             disabled={semEstoque}
             onClick={() => setQuantidade((q) => Math.max(1, q - 1))}
           >
@@ -187,8 +188,8 @@ export function ProductCard({ produto }: { produto: Produto }) {
           />
           <button
             type="button"
-            aria-label="Aumentar quantidade"
-            className="flex h-9 w-9 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40"
+            aria-label={`Aumentar ${produto.nome}, tamanho ${tamanhoSelecionado ?? 'não selecionado'}`}
+            className="flex size-11 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40"
             disabled={semEstoque}
             onClick={() => setQuantidade((q) => Math.min(estoqueMaximo, q + 1))}
           >

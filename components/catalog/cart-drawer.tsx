@@ -12,7 +12,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { useCart, type CartItem } from '@/components/catalog/cart-context'
-import { buildWhatsAppOrderUrl } from '@/lib/whatsapp'
+import { CartCheckout } from '@/components/catalog/cart-checkout'
 import { CART_TRIGGER_ID } from '@/lib/fly-to-cart'
 import { QuantityInput } from '@/components/catalog/quantity-input'
 
@@ -58,8 +58,8 @@ function CartLine({ item }: { item: CartItem }) {
           <div className="flex items-center rounded-md border border-input">
             <button
               type="button"
-              aria-label="Diminuir quantidade"
-              className="flex size-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+              aria-label={`Diminuir ${item.nome}, tamanho ${item.tamanho}`}
+              className="flex size-11 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
               onClick={() => atualizarQuantidade(item.produto_id, item.tamanho, item.quantidade - 1)}
             >
               {item.quantidade === 1 ? <Trash2 className="size-3.5" /> : <Minus className="size-3.5" />}
@@ -73,9 +73,9 @@ function CartLine({ item }: { item: CartItem }) {
             />
             <button
               type="button"
-              aria-label="Aumentar quantidade"
+              aria-label={`Aumentar ${item.nome}, tamanho ${item.tamanho}`}
               disabled={noLimite}
-              className="flex size-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex size-11 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
               onClick={() => atualizarQuantidade(item.produto_id, item.tamanho, item.quantidade + 1)}
             >
               <Plus className="size-3.5" />
@@ -171,22 +171,7 @@ export function CartDrawer() {
                 <dd className="font-display text-2xl font-extrabold tabular-nums text-primary">{formatBRL(total)}</dd>
               </div>
             </dl>
-            <Button
-              size="lg"
-              nativeButton={false}
-              className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
-              render={<a href={buildWhatsAppOrderUrl(itens, total)} target="_blank" rel="noopener noreferrer" />}
-            >
-              Finalizar pedido no WhatsApp
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={limparCarrinho}
-              className="w-full text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4" />
-              Esvaziar carrinho
-            </Button>
+            <CartCheckout />
           </SheetFooter>
         )}
       </SheetContent>

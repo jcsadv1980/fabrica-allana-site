@@ -7,25 +7,26 @@ import { CartBottomBar } from '@/components/catalog/cart-bottom-bar'
 import { WhatsAppFab } from '@/components/catalog/whatsapp-fab'
 import { MobileNavBar } from '@/components/catalog/mobile-nav-bar'
 import { HowToBuy } from '@/components/catalog/how-to-buy'
-import type { Produto } from '@/lib/types'
+import type { ProdutoPublico } from '@/lib/types'
 
 export default async function CatalogPage() {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('produtos')
     .select(
-      'id, nome, time, cor, categoria, preco_atacado, custo, foto_url, ativo, criado_em, produto_tamanhos(id, produto_id, tamanho, estoque_atual, estoque_minimo)',
+      'id, nome, time, cor, categoria, preco_atacado, foto_url, ativo, criado_em, produto_tamanhos(id, produto_id, tamanho, estoque_atual, estoque_minimo)',
     )
     .eq('ativo', true)
     .order('time', { ascending: true })
 
   if (error) {
-    console.log('[v0] CatalogPage error:', error.message)
+    console.error('Falha ao carregar catálogo:', error.code)
+    throw new Error('Não foi possível carregar o catálogo.')
   }
 
-  const produtos = ((data ?? []) as unknown as (Produto & { produto_tamanhos: Produto['tamanhos'] })[]).map(
+  const produtos = ((data ?? []) as unknown as (ProdutoPublico & { produto_tamanhos: ProdutoPublico['tamanhos'] })[]).map(
     (p) => ({ ...p, tamanhos: p.produto_tamanhos ?? [] }),
-  ) as Produto[]
+  ) as ProdutoPublico[]
 
   return (
     <CartProvider>

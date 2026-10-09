@@ -16,12 +16,12 @@ const produtoSchema = z.object({
   time: z.string().trim().min(2, 'Informe o time.'),
   cor: z.string().trim().optional(),
   categoria: z.enum(['Conjuntinho', 'Camisa', 'Bermuda']),
-  preco_atacado: z.coerce.number().min(0, 'Preço inválido.'),
+  preco_atacado: z.coerce.number().positive('Informe um preço maior que zero.'),
   custo: z.coerce.number().min(0).optional(),
   ativo: z.coerce.boolean(),
 })
 
-export type ProdutoFormState = { error: string | null; success: boolean }
+export type ProdutoFormState = { error: string | null; success: boolean; fieldErrors?: Record<string, string[]> }
 
 function parseTamanhos(raw: FormDataEntryValue | null) {
   if (!raw) return []
@@ -54,12 +54,12 @@ export async function createProdutoAction(
   })
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Dados inválidos.', success: false }
+    return { error: 'Revise os campos destacados.', success: false, fieldErrors: z.flattenError(parsed.error).fieldErrors }
   }
 
   const tamanhos = parseTamanhos(formData.get('tamanhos'))
   if (tamanhos === null) return { error: 'Tamanhos inválidos.', success: false }
-  if (tamanhos.length === 0) return { error: 'Adicione ao menos um tamanho.', success: false }
+  if (tamanhos.length === 0) return { error: 'Adicione ao menos um tamanho.', success: false, fieldErrors: { tamanhos: ['Selecione ao menos um tamanho.'] } }
 
   try {
     const fotoUrl = String(formData.get('foto_url') ?? '') || null
@@ -125,12 +125,12 @@ export async function updateProdutoAction(
   })
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Dados inválidos.', success: false }
+    return { error: 'Revise os campos destacados.', success: false, fieldErrors: z.flattenError(parsed.error).fieldErrors }
   }
 
   const tamanhos = parseTamanhos(formData.get('tamanhos'))
   if (tamanhos === null) return { error: 'Tamanhos inválidos.', success: false }
-  if (tamanhos.length === 0) return { error: 'Adicione ao menos um tamanho.', success: false }
+  if (tamanhos.length === 0) return { error: 'Adicione ao menos um tamanho.', success: false, fieldErrors: { tamanhos: ['Selecione ao menos um tamanho.'] } }
 
   try {
     const fotoUrl = String(formData.get('foto_url') ?? '') || null

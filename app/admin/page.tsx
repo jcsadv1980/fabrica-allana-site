@@ -15,7 +15,7 @@ import {
   BarChart3,
   Tv,
 } from 'lucide-react'
-import { AnalyticsWorkbench } from '@/components/admin/analytics-workbench'
+import { AnalyticsSection } from '@/components/admin/analytics-section'
 import { GoalCard } from '@/components/admin/goal-card'
 import { getMetaMensal } from '@/app/admin/actions/meta'
 import { createServiceClient } from '@/lib/supabase/service'
@@ -47,6 +47,11 @@ export default async function AdminDashboardPage() {
       .limit(5000),
     getMetaMensal(),
   ])
+
+  if (produtosResult.error || vendasPeriodoResult.error) {
+    console.error('Falha ao carregar painel:', produtosResult.error?.code, vendasPeriodoResult.error?.code)
+    throw new Error('Não foi possível carregar os indicadores. Tente novamente.')
+  }
 
   const produtos = (produtosResult.data ?? []) as unknown as {
     id: string
@@ -178,7 +183,7 @@ export default async function AdminDashboardPage() {
     {
       label: 'Lucro estimado',
       value: formatBRL(lucroMes),
-      hint: `margem de ${margemMes.toFixed(0)}%`,
+      hint: `margem de ${margemMes.toFixed(0)}% · custo atual, sem despesas`,
       icon: TrendingUp,
       accent: 'gold',
     },
@@ -247,7 +252,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {estoqueBaixo.length > 0 && (
-        <Link href="/admin/estoque" className="group flex items-center justify-between gap-4 rounded-2xl border border-gold/40 bg-gold/10 p-4 transition-colors hover:bg-gold/15">
+        <Link href="/admin/estoque?aba=reposicao" className="group flex items-center justify-between gap-4 rounded-2xl border border-gold/40 bg-gold/10 p-4 transition-colors hover:bg-gold/15">
           <div className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-full bg-gold text-gold-foreground"><AlertTriangle className="size-5" /></span><div><p className="font-bold">{estoqueBaixo.length} tamanhos precisam de atenção</p><p className="text-sm text-muted-foreground">Veja o que precisa ser reposto antes dos próximos pedidos.</p></div></div>
           <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
         </Link>
@@ -296,7 +301,7 @@ export default async function AdminDashboardPage() {
         <h2 className="font-display text-sm font-bold uppercase tracking-wide text-muted-foreground">Desempenho</h2>
       </div>
 
-      <AnalyticsWorkbench vendas={vendasPeriodo} custos={Object.fromEntries(custoPorProduto)} />
+      <AnalyticsSection vendas={vendasPeriodo} custos={Object.fromEntries(custoPorProduto)} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="transition-shadow hover:shadow-md">

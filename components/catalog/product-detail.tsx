@@ -21,7 +21,7 @@ import { ShareProduct } from '@/components/catalog/share-product'
 import { QuantityInput } from '@/components/catalog/quantity-input'
 import { buildWhatsAppContactUrl } from '@/lib/whatsapp'
 import { flyToCart } from '@/lib/fly-to-cart'
-import type { Produto } from '@/lib/types'
+import type { ProdutoPublico as Produto } from '@/lib/types'
 
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -186,6 +186,7 @@ export function ProductDetail({ produto }: { produto: Produto }) {
                     key={t.id}
                     type="button"
                     disabled={indisponivel}
+                    aria-label={`${produto.nome}, tamanho ${t.tamanho}${indisponivel ? ', esgotado' : ''}`}
                     aria-pressed={ativo}
                     onClick={() => {
                       setTamanhoSelecionado(t.tamanho)

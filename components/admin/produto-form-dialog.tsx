@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Field, FieldLabel, FieldError, FieldGroup } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
 import {
   Dialog,
@@ -52,12 +53,14 @@ function CurrencyField({
   label,
   defaultValue,
   required,
+  errors,
 }: {
   id: string
   name: string
   label: string
   defaultValue?: number | string | null
   required?: boolean
+  errors?: string[]
 }) {
   const initialCents = defaultValue ? Math.round(Number(defaultValue) * 100) : 0
   const [cents, setCents] = useState(initialCents)
@@ -65,10 +68,13 @@ function CurrencyField({
   const displayValue = touched || cents > 0 ? `R$ ${centsToBRL(cents)}` : ''
 
   return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
+    <Field data-invalid={Boolean(errors?.length)}>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Input
         id={id}
+        required={required}
+        aria-invalid={Boolean(errors?.length)}
+        aria-describedby={errors?.length ? `${id}-error` : undefined}
         inputMode="numeric"
         placeholder="R$ 0,00"
         className={inputTouch}
@@ -79,8 +85,9 @@ function CurrencyField({
           setCents(digitsOnly ? Number.parseInt(digitsOnly, 10) : 0)
         }}
       />
-      <input type="hidden" name={name} value={(cents / 100).toFixed(2)} required={required} />
-    </div>
+      <input type="hidden" name={name} value={(cents / 100).toFixed(2)} />
+      <FieldError id={`${id}-error`} errors={errors?.map(message => ({ message }))} />
+    </Field>
   )
 }
 
@@ -138,6 +145,9 @@ export function ProdutoFormDialog({ produto, duplicarDe }: { produto?: Produto; 
       setTamanhos(buildEstadoInicial(base))
     } else if (state.error) {
       toast.error(state.error)
+      const first = Object.keys(state.fieldErrors ?? {})[0]
+      const target = first ? formRef.current?.querySelector<HTMLElement>(`[id="${first}"]`) : formRef.current?.querySelector<HTMLElement>('[role="alert"]')
+      target?.focus()
     }
   }, [state, isEdit, base])
 
@@ -259,23 +269,28 @@ export function ProdutoFormDialog({ produto, duplicarDe }: { produto?: Produto; 
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-2 sm:col-span-2">
-              <Label htmlFor="nome">Nome do produto</Label>
+          <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field className="sm:col-span-2" data-invalid={Boolean(state.fieldErrors?.nome)}>
+              <FieldLabel htmlFor="nome">Nome do produto</FieldLabel>
               <Input
                 id="nome"
                 name="nome"
+                minLength={2}
+                aria-invalid={Boolean(state.fieldErrors?.nome)}
+                aria-describedby="nome-error"
                 defaultValue={base?.nome}
                 placeholder="Conjunto Infantil"
                 className={inputTouch}
                 required
               />
-            </div>
+              <FieldError id="nome-error" errors={state.fieldErrors?.nome?.map(message => ({ message }))} />
+            </Field>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="time">Time</Label>
-              <Input id="time" name="time" defaultValue={base?.time} placeholder="Flamengo" className={inputTouch} required />
-            </div>
+            <Field data-invalid={Boolean(state.fieldErrors?.time)}>
+              <FieldLabel htmlFor="time">Time</FieldLabel>
+              <Input id="time" name="time" minLength={2} aria-invalid={Boolean(state.fieldErrors?.time)} aria-describedby="time-error" defaultValue={base?.time} placeholder="Flamengo" className={inputTouch} required />
+              <FieldError id="time-error" errors={state.fieldErrors?.time?.map(message => ({ message }))} />
+            </Field>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="categoria">Categoria</Label>
@@ -300,6 +315,7 @@ export function ProdutoFormDialog({ produto, duplicarDe }: { produto?: Produto; 
               id="preco_atacado"
               name="preco_atacado"
               label="Preço no atacado"
+              errors={state.fieldErrors?.preco_atacado}
               defaultValue={base?.preco_atacado}
               required
             />
@@ -308,9 +324,10 @@ export function ProdutoFormDialog({ produto, duplicarDe }: { produto?: Produto; 
               id="custo"
               name="custo"
               label="Custo de produção"
+              errors={state.fieldErrors?.custo}
               defaultValue={base?.custo ?? ''}
             />
-          </div>
+          </FieldGroup>
 
           <div className="flex flex-col gap-3 rounded-md border border-border p-3">
             <div>
@@ -385,7 +402,7 @@ export function ProdutoFormDialog({ produto, duplicarDe }: { produto?: Produto; 
             <Switch name="ativo" defaultChecked={base?.ativo ?? true} />
           </div>
 
-          {state.error && <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error && <FieldError tabIndex={-1}>{state.error}</FieldError>}
 
           <DialogFooter>
             <SubmitButton isEdit={isEdit} disabled={uploading || tamanhosAtivos.length === 0} />

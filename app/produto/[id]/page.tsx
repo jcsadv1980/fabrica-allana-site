@@ -4,7 +4,7 @@ import { SiteHeader } from '@/components/catalog/site-header'
 import { CartProvider } from '@/components/catalog/cart-context'
 import { WhatsAppFab } from '@/components/catalog/whatsapp-fab'
 import { ProductDetail } from '@/components/catalog/product-detail'
-import type { Produto } from '@/lib/types'
+import type { ProdutoPublico as Produto } from '@/lib/types'
 
 export default async function ProdutoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -12,14 +12,15 @@ export default async function ProdutoPage({ params }: { params: Promise<{ id: st
   const { data, error } = await supabase
     .from('produtos')
     .select(
-      'id, nome, time, cor, categoria, preco_atacado, custo, foto_url, ativo, criado_em, produto_tamanhos(id, produto_id, tamanho, estoque_atual, estoque_minimo)',
+      'id, nome, time, cor, categoria, preco_atacado, foto_url, ativo, criado_em, produto_tamanhos(id, produto_id, tamanho, estoque_atual, estoque_minimo)',
     )
     .eq('id', id)
     .eq('ativo', true)
     .maybeSingle()
 
   if (error) {
-    console.log('[v0] ProdutoPage error:', error.message)
+    console.error('Falha ao carregar produto:', error.code)
+    throw new Error('Não foi possível carregar o produto.')
   }
 
   if (!data) {

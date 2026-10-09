@@ -5,7 +5,7 @@ import { PackageSearch, X } from 'lucide-react'
 import { CatalogFilters, type Filtros } from '@/components/catalog/catalog-filters'
 import { ProductCard } from '@/components/catalog/product-card'
 import { Button } from '@/components/ui/button'
-import type { Produto } from '@/lib/types'
+import type { ProdutoPublico as Produto } from '@/lib/types'
 
 const initialFilters: Filtros = { busca: '', time: 'todos', tamanho: 'todos', ordenar: 'recentes' }
 
@@ -17,6 +17,32 @@ export function CatalogClient({ produtos }: { produtos: Produto[] }) {
   const [filtros, setFiltros] = useState<Filtros>(initialFilters)
   const times = useMemo(() => Array.from(new Set(produtos.map((p) => p.time))).sort(), [produtos])
   const tamanhos = useMemo(() => Array.from(new Set(produtos.flatMap((p) => (p.tamanhos ?? []).map((t) => t.tamanho)))).sort((a, b) => Number(a) - Number(b)), [produtos])
+
+  const [urlReady, setUrlReady] = useState(false)
+  useEffect(() => {
+    const restore = () => {
+      const params = new URLSearchParams(window.location.search)
+      const ordenar = params.get('ordenar')
+      setFiltros({ busca: params.get('busca') ?? '', time: params.get('time') ?? 'todos', tamanho: params.get('tamanho') ?? 'todos', ordenar: ordenar === 'menor-preco' || ordenar === 'maior-preco' ? ordenar : 'recentes' })
+      setUrlReady(true)
+    }
+    restore()
+    window.addEventListener('popstate', restore)
+    return () => window.removeEventListener('popstate', restore)
+  }, [])
+
+  useEffect(() => {
+    if (!urlReady) return
+    const timer = setTimeout(() => {
+      const url = new URL(window.location.href)
+      for (const key of Object.keys(initialFilters) as (keyof Filtros)[]) {
+        if (filtros[key] === initialFilters[key]) url.searchParams.delete(key)
+        else url.searchParams.set(key, filtros[key])
+      }
+      window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [filtros, urlReady])
 
   useEffect(() => {
     const resetCatalog = () => setFiltros(initialFilters)
@@ -30,9 +56,10 @@ export function CatalogClient({ produtos }: { produtos: Produto[] }) {
   }, [])
 
   const filteredProducts = useMemo(() => {
-    const query = filtros.busca.trim().toLowerCase()
+    const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    const query = normalize(filtros.busca.trim())
     const filtered = produtos.filter((product) => {
-      if (query && !`${product.nome} ${product.time} ${product.cor ?? ''}`.toLowerCase().includes(query)) return false
+      if (query && !normalize(`${product.nome} ${product.time} ${product.cor ?? ''}`).includes(query)) return false
       if (filtros.time !== 'todos' && product.time !== filtros.time) return false
       if (filtros.tamanho !== 'todos' && !(product.tamanhos ?? []).some((size) => size.tamanho === filtros.tamanho && size.estoque_atual > 0)) return false
       return true
@@ -61,7 +88,7 @@ export function CatalogClient({ produtos }: { produtos: Produto[] }) {
         <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6"><CatalogFilters filtros={filtros} onChange={setFiltros} times={times} tamanhos={tamanhos} /></div>
       </div>
 
-      <div id="catalogo" className="mx-auto w-full max-w-6xl flex-1 scroll-mt-32 px-4 pb-28 pt-7 sm:px-6">
+      <div className="mx-auto w-full max-w-6xl flex-1 scroll-mt-32 px-4 pb-28 pt-7 sm:px-6">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-gold">Catálogo A&amp;A</p><h2 className="font-display mt-1 text-2xl font-extrabold sm:text-3xl">Conjuntos disponíveis</h2><p className="mt-1 text-sm text-muted-foreground">{filteredProducts.length} {filteredProducts.length === 1 ? 'modelo encontrado' : 'modelos encontrados'}</p></div>
           {activeFilters.length > 0 && <Button variant="ghost" size="sm" onClick={() => setFiltros(initialFilters)}>Limpar filtros</Button>}
