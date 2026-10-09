@@ -17,7 +17,7 @@ export async function createClient() {
     process.env.SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase URL and public key are not configured')
+    return null
   }
 
   return createServerClient(

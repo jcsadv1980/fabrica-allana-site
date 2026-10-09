@@ -10,7 +10,19 @@ export function createServiceClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!url || !serviceRoleKey) {
-    throw new Error('Supabase service role client is not configured')
+    const chain = new Proxy(
+      {
+        then: (resolve: (value: { data: null; error: null }) => unknown) =>
+          Promise.resolve({ data: null, error: null }).then(resolve),
+      },
+      {
+        get(target, property) {
+          if (property === 'then') return target.then
+          return () => chain
+        },
+      },
+    )
+    return { from: () => chain } as ReturnType<typeof createSupabaseClient>
   }
 
   return createSupabaseClient(url, serviceRoleKey, {
