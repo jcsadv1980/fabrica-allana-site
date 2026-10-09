@@ -11,25 +11,19 @@ import type { Produto } from '@/lib/types'
 
 export default async function CatalogPage() {
   const supabase = await createClient()
-  let data: unknown[] = []
+  const { data, error } = await supabase
+    .from('produtos')
+    .select(
+      'id, nome, time, cor, categoria, preco_atacado, custo, foto_url, ativo, criado_em, produto_tamanhos(id, produto_id, tamanho, estoque_atual, estoque_minimo)',
+    )
+    .eq('ativo', true)
+    .order('time', { ascending: true })
 
-  if (supabase) {
-    const result = await supabase
-      .from('produtos')
-      .select(
-        'id, nome, time, cor, categoria, preco_atacado, custo, foto_url, ativo, criado_em, produto_tamanhos(id, produto_id, tamanho, estoque_atual, estoque_minimo)',
-      )
-      .eq('ativo', true)
-      .order('time', { ascending: true })
-
-    if (result.error) {
-      console.error('[v0] CatalogPage error:', result.error.message)
-    }
-
-    data = result.data ?? []
+  if (error) {
+    console.log('[v0] CatalogPage error:', error.message)
   }
 
-  const produtos = (data as unknown as (Produto & { produto_tamanhos: Produto['tamanhos'] })[]).map(
+  const produtos = ((data ?? []) as unknown as (Produto & { produto_tamanhos: Produto['tamanhos'] })[]).map(
     (p) => ({ ...p, tamanhos: p.produto_tamanhos ?? [] }),
   ) as Produto[]
 

@@ -9,8 +9,6 @@ const metaSchema = z.coerce.number().min(0, 'Informe um valor válido.').max(100
 
 export async function getMetaMensal() {
   const supabase = createServiceClient()
-  if (!supabase) return 0
-
   const { data } = await supabase.from('configuracoes').select('valor').eq('chave', 'meta_mensal').maybeSingle()
   const valor = Number((data?.valor as { valor?: number } | null)?.valor ?? 0)
   return Number.isFinite(valor) ? valor : 0

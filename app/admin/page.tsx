@@ -37,18 +37,14 @@ export default async function AdminDashboardPage() {
 
   const [produtosResult, vendasPeriodoResult, metaMensal] = await Promise.all([
     supabase
-      ? supabase
-          .from('produtos')
-          .select('id, nome, time, ativo, preco_atacado, custo, produto_tamanhos(id, tamanho, estoque_atual, estoque_minimo)')
-      : Promise.resolve({ data: null }),
+      .from('produtos')
+      .select('id, nome, time, ativo, preco_atacado, custo, produto_tamanhos(id, tamanho, estoque_atual, estoque_minimo)'),
     supabase
-      ? supabase
-          .from('vendas')
-          .select('id, itens, total, data, cliente')
-          .gte('data', inicioPeriodo.toISOString())
-          .order('data', { ascending: false })
-          .limit(5000)
-      : Promise.resolve({ data: null }),
+      .from('vendas')
+      .select('id, itens, total, data, cliente')
+      .gte('data', inicioPeriodo.toISOString())
+      .order('data', { ascending: false })
+      .limit(5000),
     getMetaMensal(),
   ])
 
